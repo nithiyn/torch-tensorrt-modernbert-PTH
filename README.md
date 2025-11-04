@@ -2,6 +2,15 @@
 
 Performance benchmarking suite for ModernBERT with multiple attention backends and compilation strategies, including torch.compile (Inductor), TensorRT AOT, and TensorRT hybrid graph compilation.
 
+## Summary
+
+Best numbers so far are from FA2 + pytorch inductor backend  with static shapes and warmup to cache.
+
+- Most dynamic-capture compiler frontends can’t keep the whole model in a single graph because FA2 kernels plus data-dependent (ragged) shapes trigger graph breaks. As a result, attention runs via eager fallbacks (FA2 stays as an external CUDA op), and only the surrounding blocks are compiled.
+- TensorRT AOT would further optimize the model if FA2 were lowerable into the engine. TRT-LLM has an attention plugin, but ModernBERT can’t use that path today, so FA2 remains outside.
+- Using the TensorRT backend via PyTorch (torch.compile) still relies on runtime capture/partitioning, so you don’t get a single static AOT engine without dropping FA2 support.
+- In practice, TRT AOT can deliver strong speedups on the non-attention parts (fusing GEMMs, epilogues, norms). But without FA2, it falls back to quadratic attention, which scales poorly at longer sequence lengths—often making it slower overall than the FA2 path despite those layer-wise optimizations.
+
 ## Setup
 
 ### Prerequisites
