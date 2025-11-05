@@ -288,7 +288,7 @@ ModernBERT checkpoints are stored in bfloat16. Use BF16 throughout the pipeline:
 
 ### Baseline (Eager Execution)
 
-| Batch | Seq  | Tok ms | Infer ms | E2E ms | Throughput (tok/s) |
+| Batch | Seq  | Tokenization time ms | Infer ms | E2E ms | Throughput (tok/s) |
 |-------|------|--------|----------|--------|--------------------|
 | 2     | 2048 | 6.5    | 33.7     | 40.7   | 100,764            |
 | 2     | 3072 | 9.7    | 44.7     | 54.5   | 112,688            |
@@ -301,7 +301,7 @@ ModernBERT checkpoints are stored in bfloat16. Use BF16 throughout the pipeline:
 
 static shapes with warmup, FA2 kernels:
 
-| Engine                  | Batch | Seq  | Tok ms | Infer ms | E2E ms | Throughput (tok/s) |
+| Engine                  | Batch | Seq  | Tokenization time ms | Infer ms | E2E ms | Throughput (tok/s) |
 |-------------------------|-------|------|--------|----------|--------|--------------------|
 | torch.compile[inductor] | 2     | 2048 | 6.6    | 25.6     | 32.7   | 125,382            |
 | torch.compile[inductor] | 2     | 3072 | 9.7    | 40.3     | 50.2   | 122,309            |
@@ -316,7 +316,7 @@ static shapes with warmup, FA2 kernels:
 
 JIT compilation with torch_tensorrt backend:
 
-| Engine                        | Batch | Seq  | Tok ms | Infer ms | E2E ms | Throughput (tok/s) |
+| Engine                        | Batch | Seq  | Tokenization time ms | Infer ms | E2E ms | Throughput (tok/s) |
 |-------------------------------|-------|------|--------|----------|--------|--------------------|
 | torch.compile[torch_tensorrt] | 2     | 2048 | 6.6    | 33.9     | 40.9   | 100,241            |
 | torch.compile[torch_tensorrt] | 2     | 3072 | 9.7    | 46.8     | 56.7   | 108,345            |
@@ -331,7 +331,7 @@ JIT compilation with torch_tensorrt backend:
 
 Using SageAttention with torch.compile but excluding attention from Triton compilation:
 
-| Engine                | Batch | Seq  | Tok ms | Infer ms | E2E ms | Throughput (tok/s) |
+| Engine                | Batch | Seq  | Tokenization time ms | Infer ms | E2E ms | Throughput (tok/s) |
 |-----------------------|-------|------|--------|----------|--------|--------------------|
 | Sage+Compile(no-attn) | 2     | 2048 | 6.6    | 37.2     | 44.2   | 92,610             |
 | Sage+Compile(no-attn) | 2     | 3072 | 9.8    | 62.7     | 72.7   | 84,456             |
