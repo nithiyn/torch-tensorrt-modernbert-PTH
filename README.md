@@ -262,29 +262,6 @@ trt_gm = torch_tensorrt.dynamo.compile(
 )
 ```
 
-## Aggressive TensorRT Optimization
-
-Recommended settings for maximum performance:
-
-```python
-trt_model = torch_tensorrt.dynamo.compile(
-    exported_program,
-    inputs=[...],
-    enabled_precisions={torch.bfloat16},
-    require_full_compilation=True,
-    optimization_level=5,
-    assume_dynamic_shape_support=True,
-    use_fast_partitioner=True,
-    enable_experimental_decompositions=True,
-    cache_built_engines=True,
-    reuse_cached_engines=True,
-    workspace_size=8 << 30,  # 8GB
-    sparse_weights=True,
-    hardware_compatible=True,
-    debug=False
-)
-```
-
 ### 2. Torch-Compile JIT (torch.compile + TensorRT Backend)
 
 Just-in-time compilation with `torch.compile(model, backend="torch_tensorrt")`. More flexible than AOT, allows hybrid fallback where unsupported ops run in PyTorch.
@@ -382,14 +359,26 @@ JIT compilation with torch_tensorrt backend:
 
 | Engine                        | Batch Size | Seq Length | Tokenization Latency (ms) | Inference Latency (ms) | Post-processing Latency (ms) | End-to-End Latency (ms) | Throughput (tokens/sec) |
 |-------------------------------|------------|------------|---------------------------|------------------------|------------------------------|-------------------------|-------------------------|
-| torch.compile[torch_tensorrt] | 2          | 2048       | 6.6                       | 33.9                   | 0.2                          | 40.9                    | 100,241                 |
-| torch.compile[torch_tensorrt] | 2          | 3072       | 9.7                       | 46.8                   | 0.2                          | 56.7                    | 108,345                 |
-| torch.compile[torch_tensorrt] | 2          | 4096       | 12.4                      | 65.2                   | 0.2                          | 77.9                    | 105,214                 |
-| torch.compile[torch_tensorrt] | 4          | 2048       | 9.7                       | 58.2                   | 0.2                          | 68.1                    | 120,215                 |
-| torch.compile[torch_tensorrt] | 4          | 3072       | 14.0                      | 87.8                   | 0.2                          | 102.2                   | 120,258                 |
-| torch.compile[torch_tensorrt] | 4          | 4096       | 18.4                      | 122.2                  | 0.3                          | 140.9                   | 116,245                 |
+| torch.compile[torch_tensorrt] | 2          | 2048       | 7.1                       | 33.9                   | 0.3                          | 41.3                    | 99,118                  |
+| torch.compile[torch_tensorrt] | 2          | 3072       | 10.4                      | 46.8                   | 0.2                          | 57.5                    | 106,895                 |
+| torch.compile[torch_tensorrt] | 2          | 4096       | 13.2                      | 65.6                   | 0.2                          | 79.2                    | 103,479                 |
+| torch.compile[torch_tensorrt] | 2          | 8192       | 26.2                      | 151.5                  | 0.2                          | 178.1                   | 91,971                  |
+| torch.compile[torch_tensorrt] | 4          | 2048       | 11.2                      | 57.6                   | 0.2                          | 69.1                    | 118,617                 |
+| torch.compile[torch_tensorrt] | 4          | 3072       | 16.9                      | 88.2                   | 0.2                          | 105.6                   | 116,412                 |
+| torch.compile[torch_tensorrt] | 4          | 4096       | 21.9                      | 122.5                  | 0.2                          | 144.8                   | 113,182                 |
+| torch.compile[torch_tensorrt] | 4          | 8192       | 43.9                      | 290.8                  | 0.3                          | 335.1                   | 97,774                  |
 
 **Note:** TensorRT JIT backend shows similar performance to eager baseline, suggesting limited TensorRT optimization with FA2 kernels.
+
+### TensorRT AOT (Static Graph via torch.export)
+
+Ahead-of-time compilation with static shapes using torch.export + TensorRT dynamo backend:
+
+| Engine                           | Batch Size | Seq Length | Tokenization Latency (ms) | Inference Latency (ms) | Post-processing Latency (ms) | End-to-End Latency (ms) | Throughput (tokens/sec) |
+|----------------------------------|------------|------------|---------------------------|------------------------|------------------------------|-------------------------|-------------------------|
+| torch_tensorrt[dynamo][static]   | 2          | 4096       | 14.4                      | 82.9                   | 0.3                          | 97.7                    | 83,768                  |
+
+**Note:** TensorRT AOT with static shapes requires SDPA attention (no FA2 support). While it produces a fully compiled engine, the lack of Flash Attention optimization results in slower inference compared to Inductor + FA2, especially at longer sequence lengths where quadratic attention becomes a bottleneck.
 
 ### SageAttention + Torch.compile (No Attention Compilation)
 
@@ -412,6 +401,7 @@ Benchmark results are saved as JSON:
 - `benchmark_results_sage.json`
 - `bench_inductor_results.json`
 - `bench_tensorrt_results.json`
+- `bench_trt_static_results.json`
 - `benchmark_results.json`
 
 Profiling traces:
