@@ -148,7 +148,7 @@ def parse_args():
     p.add_argument("--static_b", type=int, default=2)
     p.add_argument("--static_s", type=int, default=2048)
     p.add_argument("--batch_sizes", type=int, nargs="+", default=[2,4])
-    p.add_argument("--max_lengths", type=int, nargs="+", default=[2048,3072,4096])
+    p.add_argument("--max_lengths", type=int, nargs="+", default=[2048,3072,4096,8192])
     p.add_argument("--num_sample", type=int, default=200)
     p.add_argument("--warmup", type=int, default=3)
     p.add_argument("--fullgraph", action="store_true", help="Enable fullgraph=True (usually False with Sage)")
@@ -283,12 +283,12 @@ def main():
     print("="*80 + "\n")
 
     print("\nSummary Table:")
-    headers = ["Engine","Batch","Seq","Tok ms","Infer ms","E2E ms","Throughput (tok/s)","Max|Δ|"]
-    print(f"{headers[0]:<24} {headers[1]:<6} {headers[2]:<6} {headers[3]:<8} {headers[4]:<9} {headers[5]:<8} {headers[6]:<18} {headers[7]:<8}")
-    print("="*112)
+    headers = ["Engine","Batch","Seq","Tok ms","Infer ms","Post ms","E2E ms","Throughput (tok/s)","Max|Δ|"]
+    print(f"{headers[0]:<24} {headers[1]:<6} {headers[2]:<6} {headers[3]:<8} {headers[4]:<9} {headers[5]:<9} {headers[6]:<8} {headers[7]:<18} {headers[8]:<8}")
+    print("="*121)
     for r in all_results:
         print(f"{r['engine']:<24} {r['batch_size']:<6} {r['max_length']:<6} "
-              f"{r['avg_tokenize_ms']:<8.1f} {r['avg_inference_ms']:<9.1f} {r['avg_e2e_ms']:<8.1f} "
+              f"{r['avg_tokenize_ms']:<8.1f} {r['avg_inference_ms']:<9.1f} {r['avg_postprocess_ms']:<9.1f} {r['avg_e2e_ms']:<8.1f} "
               f"{r['throughput_samples_per_sec']:<18.2f} {r.get('max_abs_diff_vs_baseline','-'):<8}")
 
 if __name__ == "__main__":
